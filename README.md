@@ -1,17 +1,23 @@
 # mise-tools.nvim
 
-Manage LSP servers, linters, and formatters using [mise](https://mise.jdx.dev) from Neovim.
+Manage LSP servers, linters, and formatters using [mise](https://mise.jdx.dev)
+from Neovim.
 
-Instead of using a Neovim-specific tool installer like mason.nvim, mise-tools.nvim leverages mise — a polyglot tool version manager — so your dev tools are available both inside Neovim and on the command line.
+Instead of using a Neovim-specific tool installer like mason.nvim,
+mise-tools.nvim leverages mise — a polyglot tool version manager — so your dev
+tools are available both inside Neovim and on the command line.
 
 ## Requirements
 
 - Neovim >= 0.10
-- [mise](https://mise.jdx.dev/getting-started.html) installed and activated in your shell
+- [mise](https://mise.jdx.dev/getting-started.html) installed and activated in
+  your shell
 
 ## Installation
 
-### lazy.nvim
+### Package Managers
+
+Add something like below to your plugins config:
 
 ```lua
 {
@@ -19,19 +25,6 @@ Instead of using a Neovim-specific tool installer like mason.nvim, mise-tools.nv
   opts = {
     ensure_installed = { "lua_ls", "pyright", "gopls" },
   },
-}
-```
-
-### pckr.nvim / packer.nvim
-
-```lua
-use {
-  "tonyxwz/mise-tools.nvim",
-  config = function()
-    require("mise-tools").setup({
-      ensure_installed = { "lua_ls", "pyright", "gopls" },
-    })
-  end,
 }
 ```
 
@@ -81,17 +74,19 @@ require("mise-tools").setup({
 
 ## Commands
 
-| Command | Description |
-|---|---|
-| `:MiseInstall [names...]` | Install tools. With no args, installs all `ensure_installed` tools. |
-| `:MiseUpdate [names...]` | Update tools via `mise upgrade`. With no args, updates all `ensure_installed` tools. |
-| `:MiseStatus` | Show install status of all `ensure_installed` tools. |
+| Command                   | Description                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------ |
+| `:MiseInstall [names...]` | Install tools. With no args, installs all `ensure_installed` tools.                  |
+| `:MiseUpdate [names...]`  | Update tools via `mise upgrade`. With no args, updates all `ensure_installed` tools. |
+| `:MiseStatus`             | Show install status of all `ensure_installed` tools.                                 |
 
 All commands support tab completion from the tool registry.
 
 ### Raw mise_id
 
-In addition to registry names, you can use raw mise package identifiers anywhere — in `ensure_installed`, `:MiseInstall`, or `:MiseUpdate`. This lets you install any tool mise supports without adding it to the registry first:
+In addition to registry names, you can use raw mise package identifiers anywhere
+— in `ensure_installed`, `:MiseInstall`, or `:MiseUpdate`. This lets you install
+any tool mise supports without adding it to the registry first:
 
 ```lua
 require("mise-tools").setup({
@@ -113,7 +108,9 @@ require("mise-tools").setup({
 :MiseInstall cargo:taplo-cli
 ```
 
-Supported mise backends include `npm:`, `cargo:`, `go:`, `pipx:`, `aqua:`, `github:`, and more. See [mise backends](https://mise.jdx.dev/dev-tools/backends/) for the full list.
+Supported mise backends include `npm:`, `cargo:`, `go:`, `pipx:`, `aqua:`,
+`github:`, and more. See
+[mise backends](https://mise.jdx.dev/dev-tools/backends/) for the full list.
 
 ## Health Check
 
@@ -125,44 +122,48 @@ Run `:checkhealth mise-tools` to verify:
 
 ## Built-in Registry
 
-The plugin ships with a built-in registry mapping friendly names to mise package identifiers. The current list:
+The plugin ships with a built-in registry mapping friendly names to mise package
+identifiers. The current list:
 
 ### LSP Servers
 
-| Name | mise package | Executable |
-|---|---|---|
-| `lua_ls` | `lua-language-server` | `lua-language-server` |
-| `rust_analyzer` | `rust-analyzer` | `rust-analyzer` |
-| `taplo` | `taplo` | `taplo` |
-| `marksman` | `marksman` | `marksman` |
-| `zls` | `zls` | `zls` |
-| `helm_ls` | `helm-ls` | `helm_ls` |
-| `terraform_ls` | `terraform-ls` | `terraform-ls` |
-| `elixir_ls` | `elixir-ls` | `elixir-ls` |
-| `pyright` | `npm:pyright` | `pyright-langserver` |
-| `basedpyright` | `npm:basedpyright` | `basedpyright-langserver` |
-| `ts_ls` | `npm:typescript-language-server` | `typescript-language-server` |
-| `bashls` | `npm:bash-language-server` | `bash-language-server` |
-| `yamlls` | `npm:yaml-language-server` | `yaml-language-server` |
-| `jsonls` | `npm:vscode-langservers-extracted` | `vscode-json-language-server` |
-| `html` | `npm:vscode-langservers-extracted` | `vscode-html-language-server` |
-| `cssls` | `npm:vscode-langservers-extracted` | `vscode-css-language-server` |
-| `gopls` | `go:golang.org/x/tools/gopls` | `gopls` |
+| Name            | mise package                       | Executable                    |
+| --------------- | ---------------------------------- | ----------------------------- |
+| `lua_ls`        | `lua-language-server`              | `lua-language-server`         |
+| `rust_analyzer` | `rust-analyzer`                    | `rust-analyzer`               |
+| `taplo`         | `taplo`                            | `taplo`                       |
+| `marksman`      | `marksman`                         | `marksman`                    |
+| `zls`           | `zls`                              | `zls`                         |
+| `helm_ls`       | `helm-ls`                          | `helm_ls`                     |
+| `terraform_ls`  | `terraform-ls`                     | `terraform-ls`                |
+| `elixir_ls`     | `elixir-ls`                        | `elixir-ls`                   |
+| `pyright`       | `npm:pyright`                      | `pyright-langserver`          |
+| `basedpyright`  | `npm:basedpyright`                 | `basedpyright-langserver`     |
+| `ts_ls`         | `npm:typescript-language-server`   | `typescript-language-server`  |
+| `bashls`        | `npm:bash-language-server`         | `bash-language-server`        |
+| `yamlls`        | `npm:yaml-language-server`         | `yaml-language-server`        |
+| `jsonls`        | `npm:vscode-langservers-extracted` | `vscode-json-language-server` |
+| `html`          | `npm:vscode-langservers-extracted` | `vscode-html-language-server` |
+| `cssls`         | `npm:vscode-langservers-extracted` | `vscode-css-language-server`  |
+| `gopls`         | `go:golang.org/x/tools/gopls`      | `gopls`                       |
 
 ### Linters & Formatters
 
-| Name | mise package | Executable |
-|---|---|---|
-| `ruff` | `ruff` | `ruff` |
+| Name         | mise package | Executable   |
+| ------------ | ------------ | ------------ |
+| `ruff`       | `ruff`       | `ruff`       |
 | `shellcheck` | `shellcheck` | `shellcheck` |
-| `stylua` | `stylua` | `stylua` |
-| `shfmt` | `shfmt` | `shfmt` |
+| `stylua`     | `stylua`     | `stylua`     |
+| `shfmt`      | `shfmt`      | `shfmt`      |
 
 You can extend this registry via the `registry` option in `setup()`.
 
 ## How It Works
 
-mise-tools.nvim does **not** configure your LSP client. It only ensures tools are installed and on your PATH via mise. You still configure [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) (or any LSP client) yourself:
+mise-tools.nvim does **not** configure your LSP client. It only ensures tools
+are installed and on your PATH via mise. You still configure
+[nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) (or any LSP client)
+yourself:
 
 ```lua
 -- mise-tools ensures the binary is installed and on PATH
@@ -174,7 +175,8 @@ require("mise-tools").setup({
 require("lspconfig").lua_ls.setup({})
 ```
 
-This separation means your tools work everywhere — in Neovim, on the command line, in CI, and with other editors.
+This separation means your tools work everywhere — in Neovim, on the command
+line, in CI, and with other editors.
 
 ## License
 
