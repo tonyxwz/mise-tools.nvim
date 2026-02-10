@@ -154,6 +154,17 @@ Options ~
 `:MiseStatus`
     Show the install status of all tools in `ensure_installed`.
 
+                                                                *:MiseShow*
+`:MiseShow`
+    Open a floating window displaying the status of all tools in
+    `ensure_installed`. Each tool shows its name, mise package identifier,
+    and install status with version. Close the window with `q` or `<Esc>`.
+
+    Status icons:
+    - `[+]` installed and active
+    - `[~]` installed but inactive
+    - `[x]` not installed
+
 All commands support tab completion from the tool registry.
 
 ==============================================================================

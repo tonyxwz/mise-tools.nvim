@@ -36,3 +36,11 @@ end, {
   nargs = 0,
   desc = "Show install status of mise-managed tools",
 })
+
+vim.api.nvim_create_user_command("MiseShow", function()
+  local mise_tools = require("mise-tools")
+  mise_tools.show()
+end, {
+  nargs = 0,
+  desc = "Show mise-managed tools in a floating window",
+})

@@ -199,4 +199,10 @@ function M.status()
   end
 end
 
+--- Show a floating window with the status of ensure_installed tools.
+function M.show()
+  local ui = require("mise-tools.ui")
+  ui.show(M.config.ensure_installed, M._registry)
+end
+
 return M
