@@ -83,6 +83,28 @@ describe("mise-tools", function()
     end)
   end)
 
+  describe("raw mise_id support", function()
+    it("accepts raw mise_ids in ensure_installed without errors", function()
+      mise_tools.setup({
+        auto_install = false,
+        ensure_installed = { "lua_ls", "npm:some-unknown-tool", "cargo:taplo-cli" },
+      })
+      -- Should store them as-is without warnings
+      assert.are.same(
+        { "lua_ls", "npm:some-unknown-tool", "cargo:taplo-cli" },
+        mise_tools.config.ensure_installed
+      )
+    end)
+
+    it("accepts raw mise_ids in install() arguments", function()
+      mise_tools.setup({ auto_install = false })
+      -- Should not error; the async call will fail but that's runtime, not a Lua error
+      assert.has_no.errors(function()
+        mise_tools.install({ "npm:some-unknown-tool" })
+      end)
+    end)
+  end)
+
   describe("tool types", function()
     it("all entries have a valid type field", function()
       local valid_types = { lsp = true, linter = true, formatter = true }
