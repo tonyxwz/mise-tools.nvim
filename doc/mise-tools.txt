@@ -1,4 +1,4 @@
-*mise-tools.txt*    For Neovim >= 0.10.0    Last change: 2026 February 10
+*mise-tools.txt*    For Neovim >= 0.11.0    Last change: 2026 February 11
 
 ==============================================================================
 Table of Contents                              *mise-tools-table-of-contents*
@@ -6,12 +6,12 @@ Table of Contents                              *mise-tools-table-of-contents*
 1. Introduction                                    |mise-tools-introduction|
 2. Requirements                                    |mise-tools-requirements|
 3. Installation                                    |mise-tools-installation|
-4. Setup                                           |mise-tools-setup|
-5. Commands                                        |mise-tools-commands|
-6. Raw mise_id                                     |mise-tools-raw-mise-id|
-7. Health Check                                    |mise-tools-health-check|
-8. Built-in Registry                               |mise-tools-registry|
-9. How It Works                                    |mise-tools-how-it-works|
+4. How It Works                                    |mise-tools-how-it-works|
+5. Setup                                           |mise-tools-setup|
+6. Commands                                        |mise-tools-commands|
+7. Raw mise_id                                     |mise-tools-raw-mise-id|
+8. Health Check                                    |mise-tools-health-check|
+9. Built-in Registry                               |mise-tools-registry|
 
 ==============================================================================
 1. Introduction                                    *mise-tools-introduction*
@@ -26,32 +26,20 @@ dev tools are available both inside Neovim and on the command line.
 ==============================================================================
 2. Requirements                                    *mise-tools-requirements*
 
-- Neovim >= 0.10
+- Neovim >= 0.11
 - mise (https://mise.jdx.dev/getting-started.html) installed and activated
   in your shell
 
 ==============================================================================
 3. Installation                                    *mise-tools-installation*
 
-lazy.nvim ~
+Package managers ~
 >lua
     {
       "tonyxwz/mise-tools.nvim",
       opts = {
-        ensure_installed = { "lua_ls", "pyright", "gopls" },
+        ensure_installed = true,
       },
-    }
-<
-
-pckr.nvim / packer.nvim ~
->lua
-    use {
-      "tonyxwz/mise-tools.nvim",
-      config = function()
-        require("mise-tools").setup({
-          ensure_installed = { "lua_ls", "pyright", "gopls" },
-        })
-      end,
     }
 <
 
@@ -62,26 +50,67 @@ Manual (native packages) ~
       ~/.local/share/nvim/site/pack/plugins/start/mise-tools.nvim
 <
 
-Then in your `init.lua`:
+==============================================================================
+4. How It Works                                    *mise-tools-how-it-works*
+
+mise-tools.nvim integrates with Neovim's built-in `vim.lsp.config` API
+(added in Neovim 0.11). The workflow is:
+
+1. You define your LSP configs using |vim.lsp.config| (or use `lsp/*.lua`
+   files, e.g. from nvim-lspconfig).
+2. You set `ensure_installed = true` (or a list of specific server names).
+3. mise-tools registers a |FileType| autocommand. When you open a file:
+   - It finds which `ensure_installed` servers match the filetype
+     (by reading `vim.lsp.config[name].filetypes`).
+   - If the server's binary is on PATH, it calls `vim.lsp.enable(name)`.
+   - If the binary is missing and `auto_install` is true, it installs
+     the tool via mise, then calls `vim.lsp.enable(name)`.
+
+You do NOT need to call `vim.lsp.enable()` yourself for servers managed by
+mise-tools.
+
+Example: ~
 >lua
+    -- 1. Define your LSP configs (or use lsp/*.lua files)
+    vim.lsp.config['lua_ls'] = {
+      cmd = { 'lua-language-server' },
+      filetypes = { 'lua' },
+      root_markers = { '.luarc.json', '.git' },
+    }
+
+    vim.lsp.config['pyright'] = {
+      cmd = { 'pyright-langserver', '--stdio' },
+      filetypes = { 'python' },
+      root_markers = { 'pyproject.toml', 'setup.py', '.git' },
+    }
+
+    -- 2. Let mise-tools handle install + enable for all configured servers
     require("mise-tools").setup({
-      ensure_installed = { "lua_ls", "pyright", "gopls" },
+      ensure_installed = true,
     })
 <
 
+When you open a `.lua` file, mise-tools will:
+- Check if `lua-language-server` is on PATH
+- If missing, run `mise use --global lua-language-server@latest`
+- Call `vim.lsp.enable('lua_ls')` to start the server
+
+Binary resolution: For servers in the built-in registry, the `bin` field is
+used to check PATH. For other servers, `cmd[1]` from `vim.lsp.config` is
+used as fallback.
+
 ==============================================================================
-4. Setup                                                  *mise-tools-setup*
+5. Setup                                                  *mise-tools-setup*
 
                                                       *mise-tools.setup()*
 
 >lua
     require("mise-tools").setup({
-      -- List of tools to ensure are installed.
-      -- Names match lspconfig server names where applicable.
-      -- You can also use raw mise_ids (e.g. "npm:some-tool").
-      ensure_installed = { "lua_ls", "pyright", "gopls" },
+      -- true = ensure all servers defined in vim.lsp.config.
+      -- Can also be a list of specific server names, e.g. { "lua_ls", "pyright" }.
+      ensure_installed = true,
 
-      -- Automatically install missing tools when setup() is called.
+      -- Automatically install missing tools when a matching filetype opens.
       -- Default: true
       auto_install = true,
 
@@ -91,7 +120,7 @@ Then in your `init.lua`:
       scope = "global",
 
       -- Override or extend the built-in registry.
-      -- Each entry maps a friendly name to a mise package spec.
+      -- Each entry maps a server name to a mise package spec.
       registry = {
         -- Override an existing entry
         pyright = {
@@ -112,14 +141,19 @@ Then in your `init.lua`:
 Options ~
 
 `ensure_installed`                        *mise-tools-config-ensure_installed*
-    Type: `string[]`
+    Type: `boolean|string[]`
     Default: `{}`
-    List of tool names (registry names or raw mise_ids) to install.
+    When `true`, manages all servers defined in |vim.lsp.config|.
+    When a list (e.g. `{ "lua_ls", "pyright" }`), manages only those
+    specific servers. Names must match the names used in |vim.lsp.config|.
+    mise-tools will auto-install and enable them based on filetype.
 
 `auto_install`                            *mise-tools-config-auto_install*
     Type: `boolean`
     Default: `true`
-    When true, missing tools are installed automatically during `setup()`.
+    When true, missing tools are installed automatically when a buffer
+    with a matching filetype is opened. When false, `vim.lsp.enable()`
+    is still called (the LSP client will handle the missing binary error).
 
 `scope`                                   *mise-tools-config-scope*
     Type: `string`
@@ -137,7 +171,7 @@ Options ~
     - `type` (string): tool category: `"lsp"`, `"linter"`, or `"formatter"`
 
 ==============================================================================
-5. Commands                                            *mise-tools-commands*
+6. Commands                                            *mise-tools-commands*
 
                                                             *:MiseInstall*
 `:MiseInstall [names...]`
@@ -168,24 +202,12 @@ Options ~
 All commands support tab completion from the tool registry.
 
 ==============================================================================
-6. Raw mise_id                                     *mise-tools-raw-mise-id*
+7. Raw mise_id                                     *mise-tools-raw-mise-id*
 
 In addition to registry names, you can use raw mise package identifiers
-anywhere — in `ensure_installed`, `:MiseInstall`, or `:MiseUpdate`. This lets
-you install any tool mise supports without adding it to the registry first.
+in `:MiseInstall` or `:MiseUpdate`. This lets you install any tool mise
+supports without adding it to the registry first.
 
-In setup: ~
->lua
-    require("mise-tools").setup({
-      ensure_installed = {
-        "lua_ls",                            -- registry name
-        "npm:@tailwindcss/language-server",  -- raw mise_id
-        "cargo:taplo-cli",                   -- raw mise_id
-      },
-    })
-<
-
-Via commands: ~
 >vim
     " Install by registry name
     :MiseInstall lua_ls
@@ -201,7 +223,7 @@ Supported mise backends include `npm:`, `cargo:`, `go:`, `pipx:`, `aqua:`,
 https://mise.jdx.dev/dev-tools/backends/
 
 ==============================================================================
-7. Health Check                                    *mise-tools-health-check*
+8. Health Check                                    *mise-tools-health-check*
 
 Run `:checkhealth mise-tools` to verify:
 
@@ -210,10 +232,15 @@ Run `:checkhealth mise-tools` to verify:
 - Each `ensure_installed` tool is available
 
 ==============================================================================
-8. Built-in Registry                                   *mise-tools-registry*
+9. Built-in Registry                                   *mise-tools-registry*
 
-The plugin ships with a built-in registry mapping friendly names to mise
-package identifiers.
+The plugin ships with a built-in registry mapping server names to mise
+package identifiers. When a server in `ensure_installed` has a registry
+entry, the plugin uses the `bin` field to check PATH and the `mise_id`
+field to install.
+
+For servers NOT in the registry, the plugin falls back to `cmd[1]` from
+`vim.lsp.config` to check PATH, and uses the server name as the mise_id.
 
 LSP Servers ~
 
@@ -245,26 +272,6 @@ Linters & Formatters ~
     `shfmt`             shfmt                               shfmt
 
 You can extend this registry via the `registry` option in |mise-tools.setup()|.
-
-==============================================================================
-9. How It Works                                    *mise-tools-how-it-works*
-
-mise-tools.nvim does NOT configure your LSP client. It only ensures tools are
-installed and on your PATH via mise. You still configure nvim-lspconfig
-(https://github.com/neovim/nvim-lspconfig) or any LSP client yourself:
-
->lua
-    -- mise-tools ensures the binary is installed and on PATH
-    require("mise-tools").setup({
-      ensure_installed = { "lua_ls" },
-    })
-
-    -- You configure lspconfig as usual
-    require("lspconfig").lua_ls.setup({})
-<
-
-This separation means your tools work everywhere — in Neovim, on the command
-line, in CI, and with other editors.
 
 ==============================================================================
 vim:tw=78:ts=8:noet:ft=help:norl:

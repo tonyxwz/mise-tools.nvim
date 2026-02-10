@@ -2,15 +2,18 @@ local mise_tools = require("mise-tools")
 local registry = require("mise-tools.registry")
 
 describe("mise-tools", function()
-  -- Reset config before each test
+  -- Reset state before each test
   before_each(function()
     mise_tools.config = {
       ensure_installed = {},
-      auto_install = false, -- disable auto_install in tests
+      auto_install = false,
       scope = "global",
       registry = {},
     }
     mise_tools._registry = {}
+    mise_tools._handled = {}
+    -- Clear autocommands from previous setup() calls
+    pcall(vim.api.nvim_del_augroup_by_name, "mise-tools")
   end)
 
   describe("setup", function()
@@ -29,8 +32,54 @@ describe("mise-tools", function()
       })
       assert.are.same({ "lua_ls", "pyright" }, mise_tools.config.ensure_installed)
       assert.are.equal("local", mise_tools.config.scope)
-      -- auto_install should be false since we explicitly set it
       assert.is_false(mise_tools.config.auto_install)
+    end)
+
+    it("accepts ensure_installed = true", function()
+      mise_tools.setup({
+        ensure_installed = true,
+        auto_install = false,
+      })
+      assert.is_true(mise_tools.config.ensure_installed)
+    end)
+
+    it("creates a FileType autocommand group", function()
+      mise_tools.setup()
+      local group = vim.api.nvim_get_autocmds({ group = "mise-tools", event = "FileType" })
+      assert.is_true(#group > 0)
+    end)
+
+    it("resets _handled state on each setup call", function()
+      mise_tools._handled = { lua_ls = true }
+      mise_tools.setup({ auto_install = false })
+      assert.are.same({}, mise_tools._handled)
+    end)
+  end)
+
+  describe("get_ensure_installed", function()
+    it("returns empty list for default config", function()
+      mise_tools.setup()
+      -- default ensure_installed is {}, auto_install is true but no servers listed
+      local names = mise_tools.get_ensure_installed()
+      assert.are.equal("table", type(names))
+    end)
+
+    it("returns the list when ensure_installed is a table", function()
+      mise_tools.setup({
+        ensure_installed = { "lua_ls", "pyright" },
+        auto_install = false,
+      })
+      local names = mise_tools.get_ensure_installed()
+      assert.are.same({ "lua_ls", "pyright" }, names)
+    end)
+
+    it("returns a table when ensure_installed is true", function()
+      mise_tools.setup({
+        ensure_installed = true,
+        auto_install = false,
+      })
+      local names = mise_tools.get_ensure_installed()
+      assert.are.equal("table", type(names))
     end)
   end)
 
@@ -62,9 +111,7 @@ describe("mise-tools", function()
       })
 
       local merged = mise_tools.get_registry()
-      -- Built-in entries should be present
       assert.is_not_nil(merged.lua_ls)
-      -- User custom entry should be present
       assert.is_not_nil(merged.my_custom)
       assert.are.equal("npm:my-custom-lsp", merged.my_custom.mise_id)
     end)
@@ -89,7 +136,6 @@ describe("mise-tools", function()
         auto_install = false,
         ensure_installed = { "lua_ls", "npm:some-unknown-tool", "cargo:taplo-cli" },
       })
-      -- Should store them as-is without warnings
       assert.are.same(
         { "lua_ls", "npm:some-unknown-tool", "cargo:taplo-cli" },
         mise_tools.config.ensure_installed
@@ -98,7 +144,6 @@ describe("mise-tools", function()
 
     it("accepts raw mise_ids in install() arguments", function()
       mise_tools.setup({ auto_install = false })
-      -- Should not error; the async call will fail but that's runtime, not a Lua error
       assert.has_no.errors(function()
         mise_tools.install({ "npm:some-unknown-tool" })
       end)
