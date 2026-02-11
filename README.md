@@ -4,20 +4,20 @@ Manage LSP servers, linters, and formatters using [mise](https://mise.jdx.dev)
 from Neovim.
 
 Instead of using a Neovim-specific tool installer like mason.nvim,
-mise-tools.nvim leverages mise — a polyglot tool version manager — so your dev
+mise-tools.nvim leverages mise — a polyglot tool version manager — so dev
 tools are available both inside Neovim and on the command line.
 
 ## Requirements
 
 - Neovim >= 0.11
 - [mise](https://mise.jdx.dev/getting-started.html) installed and activated in
-  your shell
+  the shell
 
 ## Installation
 
 ### Package Managers
 
-Add something like below to your plugins config:
+Add something like below to the plugins config:
 
 ```lua
 {
@@ -38,20 +38,20 @@ git clone https://github.com/tonyxwz/mise-tools.nvim \
 
 ## How It Works
 
-1. You define your LSP configs using Neovim's built-in `vim.lsp.config` API
+1. Define LSP configs using Neovim's built-in `vim.lsp.config` API
    (or use `lsp/*.lua` files from nvim-lspconfig).
-2. You set `ensure_installed = true` (or a list of specific server names).
-3. mise-tools automatically handles the rest: when you open a file, it checks
+2. Set `ensure_installed = true` (or a list of specific server names).
+3. mise-tools automatically handles the rest: when a file is opened, it checks
    if the matching LSP server's binary is on PATH. If missing, it installs via
    mise, then calls `vim.lsp.enable()` to activate the server.
 
-You do **not** need to call `vim.lsp.enable()` yourself for servers managed by
+There is no need to call `vim.lsp.enable()` manually for servers managed by
 mise-tools.
 
 ### Example
 
 ```lua
--- 1. Define your LSP configs (or use lsp/*.lua files)
+-- 1. Define LSP configs (or use lsp/*.lua files)
 vim.lsp.config['lua_ls'] = {
   cmd = { 'lua-language-server' },
   filetypes = { 'lua' },
@@ -70,7 +70,7 @@ require("mise-tools").setup({
 })
 ```
 
-When you open a `.lua` file, mise-tools will:
+When a `.lua` file is opened, mise-tools will:
 - Check if `lua-language-server` is on PATH
 - If missing, run `mise use --global lua-language-server@latest`
 - Call `vim.lsp.enable('lua_ls')` to start the server
@@ -116,8 +116,8 @@ All commands support tab completion from the tool registry.
 
 ### Raw mise_id
 
-In addition to registry names, you can use raw mise package identifiers in
-`:MiseInstall` or `:MiseUpdate`. This lets you install any tool mise supports
+In addition to registry names, raw mise package identifiers can be used in
+`:MiseInstall` or `:MiseUpdate`. This allows installing any tool mise supports
 without adding it to the registry first:
 
 ```vim
@@ -148,8 +148,8 @@ The plugin ships with a built-in registry mapping server names to mise package
 identifiers. When a server in `ensure_installed` has a registry entry, the
 plugin knows which mise package to install and which binary to check.
 
-For servers **not** in the registry, the plugin falls back to `cmd[1]` from the
-user's `vim.lsp.config` to determine the binary to check on PATH, and uses the
+For servers **not** in the registry, the plugin falls back to `cmd[1]` from
+`vim.lsp.config` to determine the binary to check on PATH, and uses the
 server name as the mise_id.
 
 ### LSP Servers
@@ -183,8 +183,12 @@ server name as the mise_id.
 | `stylua`     | `stylua`     | `stylua`     |
 | `shfmt`      | `shfmt`      | `shfmt`      |
 
-You can extend this registry via the `registry` option in `setup()`.
+The registry can be extended via the `registry` option in `setup()`.
 
 ## Fun Fact
 
-You can install Neovim itself via mise: `mise use --global neovim`.
+Neovim itself can be installed via mise: `mise use --global neovim`.
+
+## License
+
+MIT

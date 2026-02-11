@@ -20,7 +20,7 @@ mise-tools.nvim manages LSP servers, linters, and formatters using
 mise (https://mise.jdx.dev) from Neovim.
 
 Instead of using a Neovim-specific tool installer like mason.nvim,
-mise-tools.nvim leverages mise — a polyglot tool version manager — so your
+mise-tools.nvim leverages mise — a polyglot tool version manager — so
 dev tools are available both inside Neovim and on the command line.
 
 ==============================================================================
@@ -28,7 +28,7 @@ dev tools are available both inside Neovim and on the command line.
 
 - Neovim >= 0.11
 - mise (https://mise.jdx.dev/getting-started.html) installed and activated
-  in your shell
+  in the shell
 
 ==============================================================================
 3. Installation                                    *mise-tools-installation*
@@ -56,22 +56,22 @@ Manual (native packages) ~
 mise-tools.nvim integrates with Neovim's built-in `vim.lsp.config` API
 (added in Neovim 0.11). The workflow is:
 
-1. You define your LSP configs using |vim.lsp.config| (or use `lsp/*.lua`
-   files, e.g. from nvim-lspconfig).
-2. You set `ensure_installed = true` (or a list of specific server names).
-3. mise-tools registers a |FileType| autocommand. When you open a file:
+1. Define LSP configs using |vim.lsp.config| (or use `lsp/*.lua` files,
+   e.g. from nvim-lspconfig).
+2. Set `ensure_installed = true` (or a list of specific server names).
+3. mise-tools registers a |FileType| autocommand. When a file is opened:
    - It finds which `ensure_installed` servers match the filetype
      (by reading `vim.lsp.config[name].filetypes`).
    - If the server's binary is on PATH, it calls `vim.lsp.enable(name)`.
    - If the binary is missing and `auto_install` is true, it installs
      the tool via mise, then calls `vim.lsp.enable(name)`.
 
-You do NOT need to call `vim.lsp.enable()` yourself for servers managed by
-mise-tools.
+There is no need to call `vim.lsp.enable()` manually for servers managed
+by mise-tools.
 
 Example: ~
 >lua
-    -- 1. Define your LSP configs (or use lsp/*.lua files)
+    -- 1. Define LSP configs (or use lsp/*.lua files)
     vim.lsp.config['lua_ls'] = {
       cmd = { 'lua-language-server' },
       filetypes = { 'lua' },
@@ -90,7 +90,7 @@ Example: ~
     })
 <
 
-When you open a `.lua` file, mise-tools will:
+When a `.lua` file is opened, mise-tools will:
 - Check if `lua-language-server` is on PATH
 - If missing, run `mise use --global lua-language-server@latest`
 - Call `vim.lsp.enable('lua_ls')` to start the server
@@ -165,7 +165,7 @@ Options ~
 `registry`                                *mise-tools-config-registry*
     Type: `table<string, MiseToolEntry>`
     Default: `{}`
-    User overrides and additions to the built-in registry. Each entry has:
+    Overrides and additions to the built-in registry. Each entry has:
     - `mise_id` (string): mise package identifier, e.g. `"npm:pyright"`
     - `bin` (string): executable name to check on PATH
     - `type` (string): tool category: `"lsp"`, `"linter"`, or `"formatter"`
@@ -204,8 +204,8 @@ All commands support tab completion from the tool registry.
 ==============================================================================
 7. Raw mise_id                                     *mise-tools-raw-mise-id*
 
-In addition to registry names, you can use raw mise package identifiers
-in `:MiseInstall` or `:MiseUpdate`. This lets you install any tool mise
+In addition to registry names, raw mise package identifiers can be used
+in `:MiseInstall` or `:MiseUpdate`. This allows installing any tool mise
 supports without adding it to the registry first.
 
 >vim
@@ -271,7 +271,8 @@ Linters & Formatters ~
     `stylua`            stylua                              stylua
     `shfmt`             shfmt                               shfmt
 
-You can extend this registry via the `registry` option in |mise-tools.setup()|.
+The registry can be extended via the `registry` option in
+|mise-tools.setup()|.
 
 ==============================================================================
 vim:tw=78:ts=8:noet:ft=help:norl:
